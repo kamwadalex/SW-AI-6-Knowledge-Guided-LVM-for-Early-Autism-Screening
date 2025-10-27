@@ -1,5 +1,6 @@
 # app/api/enhanced_endpoints.py
 from fastapi import APIRouter, File, UploadFile, HTTPException, BackgroundTasks
+from fastapi.responses import Response
 import tempfile
 import os
 import uuid
@@ -9,8 +10,10 @@ from pathlib import Path
 from app.core.models import ScreeningResponse
 from app.services.video_processor import VideoPreprocessor
 from app.models.enhanced_predictor import enhanced_predictor
+from app.services.pdf_report import PDFReportGenerator
 
 logger = logging.getLogger(__name__)
+pdf_generator = PDFReportGenerator()
 
 router = APIRouter()
 video_processor = VideoPreprocessor()
@@ -69,6 +72,29 @@ async def screen_video_with_explanation(
         raise HTTPException(
             status_code=500,
             detail=f"Enhanced video processing failed: {str(e)}"
+        )
+
+@router.post("/download-report-pdf")
+async def download_report_pdf(result_data: dict):
+    """Generate and download PDF report"""
+    try:
+        # Generate PDF
+        pdf_bytes = pdf_generator.generate_pdf(result_data)
+        
+        # Return PDF as response
+        return Response(
+            content=pdf_bytes,
+            media_type="application/pdf",
+            headers={
+                "Content-Disposition": f"attachment; filename=autism_screening_report_{uuid.uuid4().hex[:8]}.pdf"
+            }
+        )
+        
+    except Exception as e:
+        logger.error(f"PDF download failed: {str(e)}")
+        raise HTTPException(
+            status_code=500,
+            detail=f"Failed to generate PDF report: {str(e)}"
         )
 
 def _cleanup_temp_file(filepath: str):

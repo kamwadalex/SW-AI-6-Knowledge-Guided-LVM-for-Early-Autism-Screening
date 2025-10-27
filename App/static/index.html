@@ -503,33 +503,54 @@
             recommendations.innerHTML = html;
         }
 
-        function downloadReport() {
+        async function downloadReport() {
             if (!currentResult) return;
             
-            // Create a formatted report
-            const report = {
-                title: "Autism Screening Report",
-                generated_at: new Date().toISOString(),
-                score: currentResult.prediction.final_score,
-                severity: currentResult.prediction.severity,
-                confidence: currentResult.prediction.confidence,
-                component_scores: currentResult.component_analysis,
-                interpretation: currentResult.interpretation,
-                knowledge_guided_explanation: currentResult.knowledge_guided_explanation,
-                processing_metadata: currentResult.processing_metadata
-            };
-            
-            // Convert to JSON and download
-            const dataStr = JSON.stringify(report, null, 2);
-            const dataBlob = new Blob([dataStr], { type: 'application/json' });
-            const url = URL.createObjectURL(dataBlob);
-            const link = document.createElement('a');
-            link.href = url;
-            link.download = `autism_screening_report_${Date.now()}.json`;
-            document.body.appendChild(link);
-            link.click();
-            document.body.removeChild(link);
-            URL.revokeObjectURL(url);
+            try {
+                // Show loading
+                const downloadBtn = document.getElementById('downloadBtn');
+                downloadBtn.disabled = true;
+                downloadBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Generating PDF...';
+                
+                // Send result to PDF generation endpoint
+                const response = await fetch('/api/v1/download-report-pdf', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(currentResult)
+                });
+                
+                if (!response.ok) {
+                    throw new Error('Failed to generate PDF');
+                }
+                
+                // Get PDF blob
+                const blob = await response.blob();
+                const url = URL.createObjectURL(blob);
+                
+                // Download
+                const link = document.createElement('a');
+                link.href = url;
+                link.download = `autism_screening_report_${Date.now()}.pdf`;
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+                URL.revokeObjectURL(url);
+                
+                // Reset button
+                downloadBtn.disabled = false;
+                downloadBtn.innerHTML = '<i class="fas fa-download me-2"></i>Download Full Report';
+                
+            } catch (error) {
+                console.error('Download error:', error);
+                alert('Failed to download PDF: ' + error.message);
+                
+                // Reset button
+                const downloadBtn = document.getElementById('downloadBtn');
+                downloadBtn.disabled = false;
+                downloadBtn.innerHTML = '<i class="fas fa-download me-2"></i>Download Full Report';
+            }
         }
 
         // Initialize tooltips
