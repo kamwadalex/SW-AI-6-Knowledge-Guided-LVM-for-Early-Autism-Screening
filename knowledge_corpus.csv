@@ -1,0 +1,11 @@
+Linked_Model,Category,Description,Severity_Indicator,Clinical_References
+TSN,Social Communication & Interaction,Difficulties in social-emotional reciprocity,Higher scores indicate greater social communication challenges,ADOS-2: Social Affect domain
+TSN,Communication,Impairments in verbal and non-verbal communication,Elevated scores suggest communication impairments,ADOS-2: Communication subscale
+TSN,Joint Attention,Challenges in sharing focus of interest with others,Increased scores reflect joint attention difficulties,Early Start Denver Model indicators
+SGCN,Social Communication & Interaction,Atypical social approach and response,Higher values indicate social interaction challenges,ADOS-2: Social Response measures
+SGCN,Early Social Attention,Reduced attention to social stimuli,Elevated scores show reduced social attention,Autism Diagnostic Observation
+SGCN,Facial Affect Recognition,Difficulties recognizing and responding to facial expressions,Increased scores suggest facial affect recognition issues,Facial Emotion Recognition tasks
+ST-GCN,Object & Repetitive Behaviors,Presence of restricted repetitive patterns of behavior,Higher scores indicate more pronounced repetitive behaviors,ADOS-2: Restricted and Repetitive Behaviors
+ST-GCN,Motor Development & Atypical Movements,Atypical motor patterns and coordination difficulties,Elevated scores reflect motor coordination challenges,Motor coordination assessment protocols
+ST-GCN,Stereotyped Motor Movements,Repetitive seemingly driven motor behaviors,Increased scores suggest presence of motor stereotypies,Stereotypy Severity Measures
+
