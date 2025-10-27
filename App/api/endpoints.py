@@ -247,25 +247,5 @@ def _cleanup_temp_file(filepath: str):
     except Exception as e:
         logger.warning(f"Failed to cleanup temporary file {filepath}: {str(e)}")
 
-# Exception handlers
-@router.exception_handler(HTTPException)
-async def http_exception_handler(request, exc):
-    return JSONResponse(
-        status_code=exc.status_code,
-        content=ErrorResponse(
-            success=False,
-            error=exc.detail
-        ).dict()
-    )
-
-@router.exception_handler(Exception)
-async def general_exception_handler(request, exc):
-    logger.error(f"Unhandled exception: {str(exc)}")
-    return JSONResponse(
-        status_code=500,
-        content=ErrorResponse(
-            success=False,
-            error="Internal server error",
-            details={"type": type(exc).__name__}
-        ).dict()
-    )
+# Note: Exception handlers should be registered on the main app instance, not on the router
+# They are registered in app/main.py

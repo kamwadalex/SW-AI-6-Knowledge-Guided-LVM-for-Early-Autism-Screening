@@ -15,6 +15,7 @@ from app.core.models import ScreeningResponse, ErrorResponse
 from app.services.video_processor import VideoPreprocessor
 from app.models.predictor import predictor
 from app.api.endpoints import router as api_router
+from fastapi import Request
 
 # Configure logging
 logging.basicConfig(
@@ -59,6 +60,32 @@ async def shutdown_event():
     """Cleanup on shutdown"""
     logger.info("Shutting down Autism Screening API")
     video_processor.cleanup()
+
+# Exception handlers
+@app.exception_handler(HTTPException)
+async def http_exception_handler(request: Request, exc: HTTPException):
+    """Handle HTTP exceptions"""
+    logger.error(f"HTTPException: {exc.status_code} - {exc.detail}")
+    return JSONResponse(
+        status_code=exc.status_code,
+        content=ErrorResponse(
+            success=False,
+            error=exc.detail
+        ).dict()
+    )
+
+@app.exception_handler(Exception)
+async def general_exception_handler(request: Request, exc: Exception):
+    """Handle general exceptions"""
+    logger.error(f"Unhandled exception: {str(exc)}", exc_info=True)
+    return JSONResponse(
+        status_code=500,
+        content=ErrorResponse(
+            success=False,
+            error="Internal server error",
+            details={"type": type(exc).__name__}
+        ).dict()
+    )
 
 @app.get("/")
 async def root():
