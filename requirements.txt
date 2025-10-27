@@ -1,10 +1,13 @@
-# Core ML
+# Production Dependencies
 torch>=2.0.0
 torchvision>=0.15.0
 numpy>=1.21.0
 scikit-learn>=1.0.0
 opencv-python>=4.5.0
 Pillow>=9.0.0
+mediapipe>=0.10.0
+romp>=1.0.0  # For 3D pose estimation
+opendr>=0.0.0  # For SMPL models
 
 # API Framework
 fastapi>=0.100.0
@@ -16,7 +19,3 @@ python-dotenv>=1.0.0
 pydantic>=2.0.0
 pydantic-settings>=2.0.0
 loguru>=0.7.0
-
-# Development
-pytest>=7.0.0
-black>=23.0.0
