@@ -4,6 +4,7 @@ from fastapi.responses import JSONResponse
 import tempfile
 import os
 import uuid
+import logging
 from pathlib import Path
 from typing import List, Optional
 
@@ -11,6 +12,8 @@ from app.core.models import ScreeningResponse, ErrorResponse
 from app.services.video_processor import VideoPreprocessor
 from app.models.predictor import predictor
 from app.core.config import settings
+
+logger = logging.getLogger(__name__)
 
 router = APIRouter()
 video_processor = VideoPreprocessor()

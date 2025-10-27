@@ -3,11 +3,14 @@ from fastapi import APIRouter, File, UploadFile, HTTPException, BackgroundTasks
 import tempfile
 import os
 import uuid
+import logging
 from pathlib import Path
 
 from app.core.models import ScreeningResponse
 from app.services.video_processor import VideoPreprocessor
 from app.models.enhanced_predictor import enhanced_predictor
+
+logger = logging.getLogger(__name__)
 
 router = APIRouter()
 video_processor = VideoPreprocessor()
