@@ -1,4 +1,3 @@
-# app/Dockerfile
 FROM python:3.9-slim
 
 WORKDIR /app
@@ -10,6 +9,7 @@ RUN apt-get update && apt-get install -y \
     libxext6 \
     libxrender-dev \
     libgl1-mesa-glx \
+    curl \
     && rm -rf /var/lib/apt/lists/*
 
 # Copy requirements and install Python dependencies
