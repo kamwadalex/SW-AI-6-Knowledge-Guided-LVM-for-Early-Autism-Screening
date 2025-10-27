@@ -206,7 +206,7 @@ Base Prediction → Knowledge Guidance → Domain Mapping → Clinical Recommend
 
 ## Deployment Checklist for Crane Cloud
 
-### 📦 Required Files
+###  Required Files
 1. **Model weights** (must be present in `model_weights/`):
    - `tsn_optical_flow.pth`
    - `sgcn_2d.pth`
@@ -319,19 +319,6 @@ http://localhost:8000/docs
 
 ---
 
-## Final Verification
-
-Before deploying, ensure:
-1. ✅ All Python files have no syntax errors
-2. ✅ Model files are present in `model_weights/`
-3. ✅ `knowledge_corpus.csv` exists at root
-4. ✅ Exception handlers are registered on app (not router)
-5. ✅ Logging is properly configured in all modules
-6. ✅ Dockerfile builds successfully
-7. ✅ Requirements.txt includes all dependencies
-
----
-
 ## Architecture Diagram
 
 ```
@@ -363,9 +350,3 @@ Enhanced Predictor (optional - models/enhanced_predictor.py)
 Response (JSON)
     ↓
 Client
-```
-
----
-
-Your system is now **deployment-ready**! 🚀
-

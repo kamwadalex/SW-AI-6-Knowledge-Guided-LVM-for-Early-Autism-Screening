@@ -33,10 +33,6 @@ ENV/
 *.md
 !README.md
 
-# Model weights (should be downloaded separately)
-model_weights/*
-!model_weights/.gitkeep
-
 # Cache and temp files
 *.cache
 *.tmp
