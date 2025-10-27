@@ -105,7 +105,7 @@ async def health_check():
     """Health check endpoint"""
     return {
         "status": "healthy",
-        "timestamp": "2024-01-01T00:00:00Z",  # You might want to use actual timestamp
+        "timestamp": "2025-01-01T00:00:00Z",  # You might want to use actual timestamp
         "models_loaded": all(model is not None for model in predictor.models.values())
     }
 

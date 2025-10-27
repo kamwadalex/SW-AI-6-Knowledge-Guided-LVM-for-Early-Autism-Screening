@@ -1,0 +1,204 @@
+:root {
+    --primary-color: #2c3e50;
+    --secondary-color: #3498db;
+    --accent-color: #e74c3c;
+    --light-bg: #f8f9fa;
+    --border-color: #dee2e6;
+}
+
+body {
+    background: #f5f7fa;
+    min-height: 100vh;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    padding: 1rem 0;
+}
+
+.main-container {
+    background: white;
+    border-radius: 15px;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.08);
+    margin: 0 auto;
+    max-width: 1200px;
+    overflow: hidden;
+}
+
+@media (max-width: 768px) {
+    .main-container {
+        border-radius: 10px;
+        margin: 0.5rem;
+        max-width: calc(100% - 1rem);
+    }
+    
+    .upload-area {
+        padding: 2rem 1rem;
+    }
+    
+    .upload-area h4 {
+        font-size: 1.1rem;
+    }
+    
+    .header-section {
+        padding: 1.5rem 1rem;
+    }
+    
+    .header-section h1 {
+        font-size: 1.5rem;
+    }
+    
+    .header-section .lead {
+        font-size: 0.9rem;
+    }
+    
+    .upload-icon {
+        font-size: 3rem;
+    }
+    
+    .score-display {
+        font-size: 2rem;
+    }
+    
+    h3 {
+        font-size: 1.25rem;
+    }
+    
+    .upload-section h3 {
+        font-size: 1.1rem;
+    }
+    
+    .btn-primary {
+        padding: 0.6rem 1.5rem;
+        font-size: 0.9rem;
+    }
+    
+    .domain-card {
+        margin-bottom: 0.75rem;
+    }
+    
+    .model-breakdown {
+        font-size: 0.9rem;
+    }
+    
+    .badge {
+        font-size: 0.75rem;
+    }
+}
+
+@media (max-width: 576px) {
+    body {
+        padding: 0.5rem 0;
+    }
+    
+    .main-container {
+        border-radius: 8px;
+    }
+    
+    .upload-area {
+        padding: 1.5rem 0.75rem;
+    }
+    
+    .header-section {
+        padding: 1rem 0.75rem;
+    }
+    
+    .btn {
+        font-size: 0.85rem;
+        padding: 0.5rem 1rem;
+    }
+}
+
+.header-section {
+    background: var(--primary-color);
+    color: white;
+    padding: 2rem;
+    text-align: center;
+}
+
+.upload-area {
+    border: 3px dashed var(--border-color);
+    border-radius: 10px;
+    padding: 3rem;
+    text-align: center;
+    transition: all 0.3s ease;
+    background: #fafbfc;
+    cursor: pointer;
+}
+
+.upload-area:hover {
+    border-color: var(--secondary-color);
+    background: #e3f2fd;
+}
+
+.upload-area.dragover {
+    border-color: var(--secondary-color);
+    background: #bbdefb;
+}
+
+.upload-icon {
+    font-size: 4rem;
+    color: var(--secondary-color);
+    margin-bottom: 1rem;
+}
+
+.file-input {
+    display: none;
+}
+
+.btn-primary {
+    background: var(--secondary-color);
+    border: none;
+    padding: 0.75rem 2rem;
+    font-weight: 600;
+}
+
+.btn-primary:hover {
+    background: #2980b9;
+}
+
+.result-section {
+    display: none;
+}
+
+.score-display {
+    font-size: 3rem;
+    font-weight: bold;
+    text-align: center;
+    margin: 1rem 0;
+}
+
+.risk-low { color: #27ae60; }
+.risk-medium { color: #f39c12; }
+.risk-high { color: #e74c3c; }
+.risk-very-high { color: #c0392b; }
+
+.domain-card {
+    border-left: 4px solid var(--secondary-color);
+    margin-bottom: 1rem;
+}
+
+.progress {
+    height: 8px;
+    margin: 0.5rem 0;
+}
+
+.model-breakdown {
+    background: var(--light-bg);
+    border-radius: 8px;
+    padding: 1rem;
+}
+
+.loading-spinner {
+    display: none;
+    text-align: center;
+    padding: 2rem;
+}
+
+.recommendation-card {
+    background: #e8f5e8;
+    border-left: 4px solid #27ae60;
+}
+
+.file-preview {
+    max-width: 200px;
+    max-height: 150px;
+    border-radius: 8px;
+}
