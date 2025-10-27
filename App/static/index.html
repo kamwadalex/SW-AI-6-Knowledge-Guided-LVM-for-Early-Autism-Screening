@@ -228,6 +228,13 @@
                             <h5>Clinical Recommendations</h5>
                             <div id="recommendations"></div>
 
+                            <!-- Download Report -->
+                            <div class="mt-4 text-center">
+                                <button class="btn btn-success" id="downloadBtn" onclick="downloadReport()" style="display: none;">
+                                    <i class="fas fa-download me-2"></i>Download Full Report
+                                </button>
+                            </div>
+
                             <!-- Raw Data Toggle -->
                             <div class="mt-4">
                                 <button class="btn btn-outline-secondary btn-sm" type="button" data-bs-toggle="collapse" data-bs-target="#rawData">
@@ -276,6 +283,7 @@
         const rawDataContent = document.getElementById('rawDataContent');
 
         let currentFile = null;
+        let currentResult = null;
 
         // Drag and drop functionality
         uploadArea.addEventListener('dragover', (e) => {
@@ -391,6 +399,9 @@
         }
 
         function displayResults(result) {
+            // Store result for download
+            currentResult = result;
+            
             // Display main score
             const finalScore = result.prediction.final_score;
             scoreValue.textContent = finalScore.toFixed(2);
@@ -414,6 +425,9 @@
 
             // Display raw data
             rawDataContent.textContent = JSON.stringify(result, null, 2);
+            
+            // Show download button
+            document.getElementById('downloadBtn').style.display = 'block';
         }
 
         function getRiskClass(score) {
@@ -487,6 +501,35 @@
                 `;
             });
             recommendations.innerHTML = html;
+        }
+
+        function downloadReport() {
+            if (!currentResult) return;
+            
+            // Create a formatted report
+            const report = {
+                title: "Autism Screening Report",
+                generated_at: new Date().toISOString(),
+                score: currentResult.prediction.final_score,
+                severity: currentResult.prediction.severity,
+                confidence: currentResult.prediction.confidence,
+                component_scores: currentResult.component_analysis,
+                interpretation: currentResult.interpretation,
+                knowledge_guided_explanation: currentResult.knowledge_guided_explanation,
+                processing_metadata: currentResult.processing_metadata
+            };
+            
+            // Convert to JSON and download
+            const dataStr = JSON.stringify(report, null, 2);
+            const dataBlob = new Blob([dataStr], { type: 'application/json' });
+            const url = URL.createObjectURL(dataBlob);
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = `autism_screening_report_${Date.now()}.json`;
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            URL.revokeObjectURL(url);
         }
 
         // Initialize tooltips

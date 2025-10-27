@@ -1,7 +1,7 @@
 # app/main.py
 from fastapi import FastAPI, File, UploadFile, HTTPException, BackgroundTasks
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import JSONResponse
+from fastapi.responses import JSONResponse, FileResponse
 from fastapi.staticfiles import StaticFiles
 import uvicorn
 import logging
@@ -44,6 +44,9 @@ app.add_middleware(
 
 # Include API routes
 app.include_router(api_router, prefix="/api/v1")
+
+# Mount static files
+app.mount("/static", StaticFiles(directory="app/static"), name="static")
 
 # Global instances
 video_processor = VideoPreprocessor()
@@ -105,6 +108,11 @@ async def health_check():
         "timestamp": "2024-01-01T00:00:00Z",  # You might want to use actual timestamp
         "models_loaded": all(model is not None for model in predictor.models.values())
     }
+
+@app.get("/app")
+async def serve_app():
+    """Serve the web application HTML"""
+    return FileResponse("app/static/index.html")
 
 if __name__ == "__main__":
     uvicorn.run(
