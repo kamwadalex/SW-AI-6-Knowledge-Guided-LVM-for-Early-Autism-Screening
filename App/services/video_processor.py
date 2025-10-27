@@ -243,10 +243,9 @@ class VideoPreprocessor:
     def _convert_mediapipe_to_smpl(self, mediapipe_coords: np.ndarray) -> np.ndarray:
         """Convert MediaPipe 33 joints to SMPL 24 joints format"""
         # MediaPipe to SMPL joint mapping (simplified)
-        # This mapping needs to be adjusted based on your exact SMPL joint definitions
         smpl_coords = np.zeros((24, 2), dtype=np.float32)
         
-        # Map key joints (this is a simplified mapping)
+        # Map key joints
         mapping = {
             # Body core
             0: 23,  # Pelvis (approximate)
