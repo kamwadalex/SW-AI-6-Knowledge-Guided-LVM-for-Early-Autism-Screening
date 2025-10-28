@@ -1,5 +1,3 @@
-Here's a comprehensive README for your Autism Screening App repository:
-
 ```markdown
 # Autism Screening System
 
