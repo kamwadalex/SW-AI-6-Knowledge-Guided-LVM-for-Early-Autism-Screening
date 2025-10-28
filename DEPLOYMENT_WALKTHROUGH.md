@@ -1,352 +1,379 @@
-# Autism Screening API - Deployment Walkthrough & System Architecture
+# Autism Screening API - Deployment Guide & System Architecture
 
----
+## Overview
+
+This document provides a comprehensive guide for deploying the Autism Screening API, a multimodal AI system for early autism screening using computer vision. The system analyzes video content to detect and classify autism-related behaviors, providing interpretable screening reports that link observed behaviors with literature-based diagnostic categories.
 
 ## System Architecture & Flow
 
-### 📁 File Structure
+### 📁 Project Structure
 ```
-app/
-├── main.py                 # FastAPI entry point
-├── api/
-│   ├── endpoints.py        # Basic screening endpoints
-│   └── enhanced_endpoints.py  # Enhanced endpoints with explanations
-├── core/
-│   ├── config.py           # Application settings
-│   ├── models.py           # Pydantic models (CREATED)
-│   └── enhanced_models.py  # Enhanced response models
-├── models/
-│   ├── predictor.py        # Main prediction pipeline
-│   ├── enhanced_predictor.py  # Enhanced predictor with knowledge guidance
-│   ├── model_loader.py     # Loads trained models
-│   ├── stgcn.py           # ST-GCN model architecture
-│   └── graph_utils.py     # Graph utilities for skeleton processing
-├── services/
-│   ├── video_processor.py  # Video preprocessing & feature extraction
-│   ├── optical_flow.py     # Optical flow computation
-│   └── knowledge_guide.py  # Knowledge-guided explanations
-└── static/
-    └── index.html          # Web UI
-```
-
----
-
-## System Flow (Request to Response)
-
-### 1. Application Startup (`app/main.py`)
-
-**Flow:**
-```
-Startup → Load Configuration → Initialize Services → Ready to Serve
-```
-
-**Code Path:**
-```python
-# Startup sequence
-@app.on_event("startup")
-async def startup_event():
-    # 1. Loads settings from app/core/config.py
-    # 2. Initializes predictor (loads 4 models)
-    # 3. Initializes video processor
-    # 4. API ready to receive requests
+.
+├── app/                    # Main application directory
+│   ├── main.py                 # FastAPI entry point
+│   ├── api/
+│   │   ├── endpoints.py        # Basic screening endpoints
+│   │   └── enhanced_endpoints.py  # Enhanced endpoints with explanations
+│   ├── core/
+│   │   ├── config.py           # Application settings
+│   │   ├── models.py           # Pydantic models (CREATED)
+│   │   └── enhanced_models.py  # Enhanced response models
+│   ├── models/
+│   │   ├── predictor.py        # Main prediction pipeline
+│   │   ├── enhanced_predictor.py  # Enhanced predictor with knowledge guidance
+│   │   ├── model_loader.py     # Loads trained models
+│   │   ├── stgcn.py           # ST-GCN model architecture
+│   │   └── graph_utils.py     # Graph utilities for skeleton processing
+│   ├── services/
+│   │   ├── video_processor.py  # Video preprocessing & feature extraction
+│   │   ├── optical_flow.py     # Optical flow computation
+│   │   ├── knowledge_guide.py  # Knowledge-guided explanations
+│   │   ├── pdf_report.py       # PDF report generation
+│   │   └── video_processor.py  # Video processing pipeline
+│   └── static/
+│       ├── index.html          # Web UI
+│       ├── script.js           # Frontend JavaScript
+│       └── styles.css          # Frontend CSS
+├── model_weights/          # Directory containing trained model weights
+│   ├── tsn_optical_flow.pth    # TSN model for optical flow analysis
+│   ├── sgcn_2d.pth             # SGCN model for 2D skeleton analysis
+│   ├── stgcn_3d.pth            # STGCN model for 3D skeleton analysis
+│   └── fusion.pkl              # Fusion model for combining predictions
+├── knowledge_corpus.csv    # Knowledge base linking models to diagnostic domains
+├── Dockerfile              # Docker configuration for containerization
+├── requirements.txt        # Python dependencies
+├── .env                    # Environment configuration (optional)
+├── .dockerignore           # Docker ignore patterns
+└── DEPLOYMENT_WALKTHROUGH.md  # This document
 ```
 
-**Models Loaded:**
-- TSN (Temporal Segment Network) - Optical flow analysis
-- SGCN (Spatial GCN) - 2D skeleton analysis
-- STGCN (Spatial-Temporal GCN) - 3D skeleton analysis
-- Fusion model - Combines all predictions
+## System Components Overview
 
----
+The Autism Screening API consists of several key components working together to provide a comprehensive analysis:
 
-### 2. Request Handling (`app/api/endpoints.py`)
+| Component | Purpose | Key Files |
+|-----------|---------|-----------|
+| **API Layer** | Endpoints & request handling | [main.py](file:///c%3A/Autism/SW-AI-6-Knowledge-Guided-LVM-for-Early-Autism-Screening/app/main.py), [api/endpoints.py](file:///c%3A/Autism/SW-AI-6-Knowledge-Guided-LVM-for-Early-Autism-Screening/app/api/endpoints.py), [api/enhanced_endpoints.py](file:///c%3A/Autism/SW-AI-6-Knowledge-Guided-LVM-for-Early-Autism-Screening/app/api/enhanced_endpoints.py) |
+| **Prediction Engine** | Model inference | [models/predictor.py](file:///c%3A/Autism/SW-AI-6-Knowledge-Guided-LVM-for-Early-Autism-Screening/app/models/predictor.py), [models/enhanced_predictor.py](file:///c%3A/Autism/SW-AI-6-Knowledge-Guided-LVM-for-Early-Autism-Screening/app/models/enhanced_predictor.py) |
+| **Video Processing** | Feature extraction | [services/video_processor.py](file:///c%3A/Autism/SW-AI-6-Knowledge-Guided-LVM-for-Early-Autism-Screening/app/services/video_processor.py), [services/optical_flow.py](file:///c%3A/Autism/SW-AI-6-Knowledge-Guided-LVM-for-Early-Autism-Screening/app/services/optical_flow.py) |
+| **Knowledge System** | Explanations | [services/knowledge_guide.py](file:///c%3A/Autism/SW-AI-6-Knowledge-Guided-LVM-for-Early-Autism-Screening/app/services/knowledge_guide.py) + [knowledge_corpus.csv](file:///c%3A/Autism/SW-AI-6-Knowledge-Guided-LVM-for-Early-Autism-Screening/knowledge_corpus.csv) |
+| **Models** | Neural networks | [model_weights/*.pth](file:///c%3A/Autism/SW-AI-6-Knowledge-Guided-LVM-for-Early-Autism-Screening/model_weights/), [model_weights/*.pkl](file:///c%3A/Autism/SW-AI-6-Knowledge-Guided-LVM-for-Early-Autism-Screening/model_weights/) |
+| **Configuration** | Settings | [core/config.py](file:///c%3A/Autism/SW-AI-6-Knowledge-Guided-LVM-for-Early-Autism-Screening/app/core/config.py) |
 
-**Endpoint: POST `/api/v1/screen`**
+## Detailed System Flow
 
-**Flow:**
-```
-Upload Video → Validate → Save Temp File → Process → Predict → Return → Cleanup
-```
+### 1. Application Startup Process
 
-**Code Path:**
-```python
-@router.post("/screen")
-async def screen_video(file: UploadFile):
-    # 1. Validate file type and size
-    _validate_video_file(file)
-    
-    # 2. Save to temporary file
-    temp_filepath = save_to_temp(file)
-    
-    # 3. Process video
-    model_inputs = video_processor.process_video(temp_filepath)
-    
-    # 4. Run prediction
-    result = predictor.predict(model_inputs)
-    
-    # 5. Return formatted response
-    return ScreeningResponse(...)
-    
-    # 6. Cleanup (background task)
-    background_tasks.add_task(_cleanup_temp_file, temp_filepath)
-```
+When the application starts, it follows this initialization sequence:
 
----
+1. **Configuration Loading**: Settings are loaded from [app/core/config.py](file:///c%3A/Autism/SW-AI-6-Knowledge-Guided-LVM-for-Early-Autism-Screening/app/core/config.py) and environment variables
+2. **Model Initialization**: All four AI models are loaded into memory:
+   - TSN (Temporal Segment Network) for optical flow analysis
+   - SGCN (Spatial GCN) for 2D skeleton analysis
+   - STGCN (Spatial-Temporal GCN) for 3D skeleton analysis
+   - Fusion model for combining individual predictions
+3. **Service Initialization**: Video processing services are initialized
+4. **API Readiness**: The FastAPI server becomes ready to accept requests
 
-### 3. Video Processing (`app/services/video_processor.py`)
+### 2. Request Handling Pipeline
 
-**Method: `process_video(video_path)`**
+The API provides two main endpoints for video analysis:
 
-**Flow:**
-```
-Extract Frames → Optical Flow (TSN) → 2D Skeleton (SGCN) → 3D Skeleton (STGCN) → Return Tensors
-```
+#### Basic Screening Endpoint
+- **Endpoint**: `POST /api/v1/screen`
+- **Purpose**: Analyze a video file for autism screening indicators
+- **Process Flow**:
+  1. Upload and validate video file
+  2. Save to temporary storage
+  3. Extract features using video processor
+  4. Run predictions through all models
+  5. Fuse results and interpret scores
+  6. Return structured response
+  7. Clean up temporary files
 
-**Details:**
-- **Extracts 64 frames** from video (uniform sampling)
-- **For TSN (10 frames):** Computes optical flow between consecutive frames
-- **For SGCN (4 frames):** Extracts 2D skeleton using MediaPipe Pose (24 joints)
-- **For STGCN (32 frames):** Extracts 3D skeleton using ROMP/MediaPipe (24 joints)
+#### Enhanced Screening Endpoint
+- **Endpoint**: `POST /api/v1/screen-with-explanation`
+- **Purpose**: Same analysis as basic endpoint but with detailed explanations
+- **Additional Features**:
+  - Knowledge-guided interpretation of results
+  - Mapping to clinical diagnostic domains
+  - Clinical recommendations based on findings
 
-**Output:**
-```python
-{
-    'tsn': torch.Tensor,    # [1, 10, 3, 224, 224]
-    'sgcn': torch.Tensor,   # [1, 4, 24, 2]
-    'stgcn': torch.Tensor  # [1, 3, 32, 24]
-}
-```
+### 3. Video Processing Pipeline
 
----
+The video processing component extracts three types of features from uploaded videos:
 
-### 4. Prediction Pipeline (`app/models/predictor.py`)
+1. **Frame Extraction**: 64 frames are uniformly sampled from the video
+2. **Optical Flow Analysis** (TSN model):
+   - Uses 10 frames for temporal analysis
+   - Computes motion patterns between consecutive frames
+3. **2D Skeleton Analysis** (SGCN model):
+   - Extracts 2D pose using MediaPipe Pose from 4 frames
+   - Processes 24 key body joints
+4. **3D Skeleton Analysis** (STGCN model):
+   - Extracts 3D pose using ROMP/MediaPipe from 32 frames
+   - Analyzes spatial-temporal movement patterns
 
-**Method: `predict(model_inputs)`**
+### 4. Prediction and Fusion Process
 
-**Flow:**
-```
-TSN Prediction → SGCN Prediction → STGCN Prediction → Fusion → Interpretation → Return
-```
+The prediction pipeline combines results from multiple models:
 
-**Code Path:**
-```python
-def predict(self, model_inputs):
-    # 1. Run individual models
-    tsn_score = self.predict_tsn(model_inputs['tsn'])
-    sgcn_score = self.predict_sgcn(model_inputs['sgcn'])
-    stgcn_score = self.predict_stgcn(model_inputs['stgcn'])
-    
-    # 2. Fuse predictions
-    fusion_result = self.fuse_predictions(tsn_score, sgcn_score, stgcn_score)
-    
-    # 3. Interpret score
-    interpretation = self.interpret_score(fusion_result['final_score'])
-    
-    # 4. Return result
-    return {
-        'prediction': {...},
-        'component_analysis': {...},
-        'interpretation': {...},
-        'processing_metadata': {...}
-    }
-```
+1. **Individual Model Predictions**:
+   - TSN analyzes optical flow for repetitive behaviors
+   - SGCN examines 2D skeletal movements for social interaction patterns
+   - STGCN evaluates 3D movement dynamics for motor development indicators
+2. **Result Fusion**:
+   - A GradientBoostingRegressor combines individual scores
+   - Produces a final ADOS-like comparison score (1-10 scale)
+3. **Score Interpretation**:
+   - 1-3: Minimal evidence of autism symptoms
+   - 4-5: Mild symptoms present
+   - 6-7: Moderate symptoms
+   - 8-10: Significant symptoms
 
-**Score Interpretation:**
-- **1-3:** Minimal evidence
-- **4-5:** Mild symptoms
-- **6-7:** Moderate symptoms
-- **8-10:** Severe symptoms
+### 5. Knowledge-Guided Enhancement
 
----
+For enhanced endpoints, the system provides additional interpretability:
 
-### 5. Enhanced Endpoint (`app/api/enhanced_endpoints.py`)
+1. **Dominant Model Identification**: Determines which models most influenced the prediction
+2. **Domain Mapping**: Links model outputs to clinical diagnostic domains
+3. **Clinical Recommendations**: Provides actionable guidance based on findings
+4. **PDF Report Generation**: Creates downloadable detailed reports
 
-**Endpoint: POST `/api/v1/screen-with-explanation`**
+## Configuration and Environment
 
-**Additional Features:**
-- Uses `EnhancedAutismScreeningPredictor`
-- Adds knowledge-guided explanations
-- Maps predictions to clinical domains
+### Key Configuration Settings
 
-**Flow:**
-```
-Base Prediction → Knowledge Guidance → Domain Mapping → Clinical Recommendations → Return
-```
+The application can be configured through [app/core/config.py](file:///c%3A/Autism/SW-AI-6-Knowledge-Guided-LVM-for-Early-Autism-Screening/app/core/config.py) and environment variables:
 
-**Knowledge Guidance (`app/services/knowledge_guide.py`):**
-- Identifies dominant models (which are driving the prediction)
-- Maps to diagnostic domains (Social Communication, Motor, etc.)
-- Provides clinical recommendations based on score and domains
+- **DEVICE**: `cuda` (GPU) or `cpu` for model inference
+- **FRAME_SIZE**: Video frame dimensions (default: 224x224)
+- **MAX_VIDEO_SIZE**: Maximum allowed video file size (default: 100MB)
+- **ALLOWED_EXTENSIONS**: Supported video formats (.mp4, .avi, .mov, .mkv)
 
----
+### Environment Variables
 
-## Model Loading (`app/models/model_loader.py`)
+Create a `.env` file in the project root for configuration:
 
-**Singleton Pattern:** Loads models once at startup
-
-**Models:**
-1. **TSN** (`model_weights/tsn_optical_flow.pth`)
-2. **SGCN** (`model_weights/sgcn_2d.pth`)
-3. **STGCN** (`model_weights/stgcn_3d.pth`) - Uses custom architecture
-4. **Fusion** (`model_weights/fusion.pkl`) - GradientBoostingRegressor
-
-**Important:** Models must exist in `model_weights/` directory
-
----
-
-## Configuration (`app/core/config.py`)
-
-**Key Settings:**
-- Device: `cuda` (GPU) or `cpu`
-- Frame size: `(224, 224)`
-- Max video size: `100MB`
-- Allowed formats: `.mp4, .avi, .mov, .mkv`
-
----
-
-## Deployment Checklist for Crane Cloud
-
-###  Required Files
-1. **Model weights** (must be present in `model_weights/`):
-   - `tsn_optical_flow.pth`
-   - `sgcn_2d.pth`
-   - `stgcn_3d.pth`
-   - `fusion.pkl`
-
-2. **Knowledge corpus**:
-   - `knowledge_corpus.csv` (now created at root)
-
-3. **Dependencies**:
-   - All packages listed in `requirements.txt`
-
-###  Deployment Steps
-
-1. **Build Docker Image:**
-```bash
-docker build -t autism-screening-api .
-```
-
-2. **Run Locally:**
-```bash
-docker run -p 8000:8000 autism-screening-api
-```
-
-3. **For Crane Cloud:**
-   - Push to your git repository
-   - Create deployment with Dockerfile
-   - Ensure model files are uploaded to `model_weights/` directory
-   - Set environment variables if needed (in `.env` file or Crane Cloud config)
-
-###  Important Notes
-
-1. **Model Files:** Make sure all `.pth` and `.pkl` files are committed to the repository or uploaded separately
-2. **CUDA:** If deploying without GPU, change `DEVICE` in config.py to `"cpu"`
-3. **Memory:** Model loading may require significant RAM during startup
-4. **Health Check:** Endpoint available at `/health`
-
-### 🔧 Environment Configuration
-
-**Optional `.env` file:**
 ```env
 DEVICE=cuda
 API_TITLE=Autism Screening API
 API_VERSION=1.0.0
+HOST=0.0.0.0
+PORT=8000
 ```
 
----
+## Deployment Prerequisites
 
-## Testing Endpoints
+### Required Files
 
-### 1. Health Check
-```bash
-curl http://localhost:8000/health
-```
+Before deployment, ensure these files are present:
 
-### 2. Root Info
-```bash
-curl http://localhost:8000/
-```
+1. **Model Weights** (in [model_weights/](file:///c%3A/Autism/SW-AI-6-Knowledge-Guided-LVM-for-Early-Autism-Screening/model_weights/) directory):
+   - [tsn_optical_flow.pth](file:///c%3A/Autism/SW-AI-6-Knowledge-Guided-LVM-for-Early-Autism-Screening/model_weights/tsn_optical_flow.pth) - TSN model weights
+   - [sgcn_2d.pth](file:///c%3A/Autism/SW-AI-6-Knowledge-Guided-LVM-for-Early-Autism-Screening/model_weights/sgcn_2d.pth) - SGCN model weights
+   - [stgcn_3d.pth](file:///c%3A/Autism/SW-AI-6-Knowledge-Guided-LVM-for-Early-Autism-Screening/model_weights/stgcn_3d.pth) - STGCN model weights
+   - [fusion.pkl](file:///c%3A/Autism/SW-AI-6-Knowledge-Guided-LVM-for-Early-Autism-Screening/model_weights/fusion.pkl) - Fusion model weights
 
-### 3. Screen Video (requires multipart/form-data)
-```bash
-curl -X POST "http://localhost:8000/api/v1/screen" \
-  -F "file=@/path/to/video.mp4"
-```
+2. **Knowledge Corpus**:
+   - [knowledge_corpus.csv](file:///c%3A/Autism/SW-AI-6-Knowledge-Guided-LVM-for-Early-Autism-Screening/knowledge_corpus.csv) - Diagnostic domain mappings
 
-### 4. Get Model Info
-```bash
-curl http://localhost:8000/api/v1/model-info
-```
+3. **Dependencies**:
+   - All packages listed in [requirements.txt](file:///c%3A/Autism/SW-AI-6-Knowledge-Guided-LVM-for-Early-Autism-Screening/requirements.txt)
 
-### 5. API Documentation
-```bash
-# Open in browser
-http://localhost:8000/docs
-```
+## Deployment Options
 
----
+### Local Deployment with Docker
 
-## Potential Issues & Solutions
+1. **Build Docker Image**:
+   ```bash
+   docker build -t autism-screening-api .
+   ```
 
-### Issue 1: Models Not Found
-**Error:** `Model {name} is not loaded`
-**Solution:** Ensure model files are in `model_weights/` directory
+2. **Run Container**:
+   ```bash
+   docker run -p 8000:8000 autism-screening-api
+   ```
 
-### Issue 2: CUDA Out of Memory
-**Error:** `CUDA out of memory`
-**Solution:** Change `DEVICE` to `"cpu"` in `config.py` or reduce batch size
+3. **Access API**:
+   - API endpoints: `http://localhost:8000/api/v1/`
+   - Documentation: `http://localhost:8000/docs`
+   - Health check: `http://localhost:8000/health`
 
-### Issue 3: MediaPipe Pose Detection Fails
-**Error:** `Error initializing pose estimators`
-**Solution:** This is handled gracefully - falls back to zeros if detection fails
+### Cloud Deployment (Crane Cloud)
 
-### Issue 4: Video Processing Fails
-**Error:** `Cannot open video file`
-**Solution:** Ensure video format is supported and codecs are installed (ffmpeg in Docker)
+1. **Prepare Repository**:
+   - Push code to your Git repository
+   - Ensure all model files are included or separately uploaded
 
----
+2. **Create Deployment**:
+   - Configure with Dockerfile
+   - Upload model files to [model_weights/](file:///c%3A/Autism/SW-AI-6-Knowledge-Guided-LVM-for-Early-Autism-Screening/model_weights/) directory
+   - Set environment variables as needed
 
-## System Components Summary
+3. **Configuration**:
+   - For GPU instances: Keep `DEVICE=cuda`
+   - For CPU-only instances: Set `DEVICE=cpu`
+   - Adjust memory allocation based on model sizes
 
-| Component | Purpose | Key Files |
-|-----------|---------|-----------|
-| **API Layer** | Endpoints & request handling | `main.py`, `api/endpoints.py`, `api/enhanced_endpoints.py` |
-| **Prediction Engine** | Model inference | `models/predictor.py`, `models/enhanced_predictor.py` |
-| **Video Processing** | Feature extraction | `services/video_processor.py`, `services/optical_flow.py` |
-| **Knowledge System** | Explanations | `services/knowledge_guide.py` + `knowledge_corpus.csv` |
-| **Models** | Neural networks | `model_weights/*.pth`, `model_weights/*.pkl` |
-| **Configuration** | Settings | `core/config.py` |
+## API Endpoints
 
----
+### Health and Information Endpoints
+
+1. **Health Check**:
+   ```bash
+   curl http://localhost:8000/health
+   ```
+
+2. **Root Information**:
+   ```bash
+   curl http://localhost:8000/
+   ```
+
+3. **Model Information**:
+   ```bash
+   curl http://localhost:8000/api/v1/model-info
+   ```
+
+### Screening Endpoints
+
+1. **Basic Screening**:
+   ```bash
+   curl -X POST "http://localhost:8000/api/v1/screen" \
+     -F "file=@/path/to/video.mp4"
+   ```
+
+2. **Enhanced Screening with Explanations**:
+   ```bash
+   curl -X POST "http://localhost:8000/api/v1/screen-with-explanation" \
+     -F "file=@/path/to/video.mp4"
+   ```
+
+3. **Batch Screening**:
+   ```bash
+   curl -X POST "http://localhost:8000/api/v1/batch-screen" \
+     -F "files=@/path/to/video1.mp4" \
+     -F "files=@/path/to/video2.mp4"
+   ```
+
+4. **Score Interpretation** (without video):
+   ```bash
+   curl "http://localhost:8000/api/v1/interpret-score?score=6.5"
+   ```
+
+### Documentation
+
+- **Swagger UI**: `http://localhost:8000/docs`
+- **ReDoc**: `http://localhost:8000/redoc`
+
+## Troubleshooting Common Issues
+
+### Model Loading Failures
+
+**Problem**: `Model {name} is not loaded`
+**Solution**: 
+- Verify all model files exist in [model_weights/](file:///c%3A/Autism/SW-AI-6-Knowledge-Guided-LVM-for-Early-Autism-Screening/model_weights/) directory
+- Check file permissions
+- Ensure sufficient disk space
+
+### GPU Memory Issues
+
+**Problem**: `CUDA out of memory`
+**Solutions**:
+- Change `DEVICE` to `"cpu"` in [config.py](file:///c%3A/Autism/SW-AI-6-Knowledge-Guided-LVM-for-Early-Autism-Screening/app/core/config.py)
+- Reduce batch size in configuration
+- Use a machine with more GPU memory
+
+### Video Processing Errors
+
+**Problem**: `Cannot open video file` or codec issues
+**Solutions**:
+- Ensure video format is supported (.mp4, .avi, .mov, .mkv)
+- Verify ffmpeg is installed in the environment
+- Check that the video file is not corrupted
+
+### MediaPipe Initialization Failures
+
+**Problem**: `Error initializing pose estimators`
+**Solution**: 
+- The system gracefully handles these errors by falling back to zero values
+- Ensure system dependencies are installed (libsm6, libxext6, libxrender-dev, libgl1-mesa-glx)
+
+## Performance Considerations
+
+### Resource Requirements
+
+- **CPU**: Multi-core processor recommended
+- **RAM**: Minimum 8GB, 16GB+ recommended
+- **Storage**: 5GB+ for model files and temporary processing
+- **GPU**: CUDA-compatible GPU with 8GB+ VRAM for optimal performance
+
+### Processing Times
+
+Typical processing times for a 30-second video:
+- **GPU (CUDA)**: 15-30 seconds
+- **CPU**: 60-120 seconds
+
+Factors affecting performance:
+- Video resolution and length
+- System hardware specifications
+- Concurrent request load
+
+## Security Considerations
+
+### Data Privacy
+
+- Videos are processed in-memory and deleted immediately after analysis
+- No video data is stored permanently
+- All processing occurs locally within the deployed environment
+
+### API Security
+
+- Consider implementing API key authentication for production use
+- Configure CORS settings appropriately
+- Use HTTPS in production environments
+
+## Maintenance and Updates
+
+### Model Updates
+
+To update models:
+1. Replace corresponding files in [model_weights/](file:///c%3A/Autism/SW-AI-6-Knowledge-Guided-LVM-for-Early-Autism-Screening/model_weights/) directory
+2. Restart the application to load new models
+
+### Knowledge Base Updates
+
+To update clinical knowledge mappings:
+1. Modify [knowledge_corpus.csv](file:///c%3A/Autism/SW-AI-6-Knowledge-Guided-LVM-for-Early-Autism-Screening/knowledge_corpus.csv)
+2. Restart the application to reload the knowledge base
+
+### System Updates
+
+To update the application:
+1. Pull latest code changes
+2. Update dependencies if [requirements.txt](file:///c%3A/Autism/SW-AI-6-Knowledge-Guided-LVM-for-Early-Autism-Screening/requirements.txt) has changed
+3. Restart the application
 
 ## Architecture Diagram
 
+```mermaid
+graph TD
+    A[Client Request] --> B[FastAPI Server]
+    B --> C[Endpoint Router]
+    C --> D[Video Processor]
+    D --> E[Frame Extraction]
+    E --> F[Optical Flow Analysis]
+    E --> G[2D Skeleton Extraction]
+    E --> H[3D Skeleton Extraction]
+    F --> I[TSN Model]
+    G --> J[SGCN Model]
+    H --> K[STGCN Model]
+    I --> L[Fusion Model]
+    J --> L
+    K --> L
+    L --> M[Prediction Results]
+    M --> N[Knowledge Guide]
+    N --> O[Enhanced Explanations]
+    O --> P[Response]
+    P --> A
 ```
-Client Request
-    ↓
-FastAPI (app/main.py)
-    ↓
-Endpoint Router (api/endpoints.py)
-    ↓
-Video Processor (services/video_processor.py)
-    ├─→ Extract Frames
-    ├─→ Optical Flow (services/optical_flow.py)
-    ├─→ 2D Skeleton (MediaPipe)
-    └─→ 3D Skeleton (ROMP/MediaPipe)
-    ↓
-Model Inputs (tensors)
-    ↓
-Predictor (models/predictor.py)
-    ├─→ TSN Model
-    ├─→ SGCN Model
-    ├─→ STGCN Model
-    └─→ Fusion Model
-    ↓
-Predictions & Interpretation
-    ↓
-Enhanced Predictor (optional - models/enhanced_predictor.py)
-    └─→ Knowledge Guide (services/knowledge_guide.py)
-    ↓
-Response (JSON)
-    ↓
-Client

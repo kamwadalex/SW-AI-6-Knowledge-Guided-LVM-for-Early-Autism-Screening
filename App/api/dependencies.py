@@ -11,7 +11,7 @@ async def verify_api_key(x_api_key: Optional[str] = Header(None)):
             detail="API key required"
         )
     
-    # Example validation - replace with your logic
+    # Example validation - to be replaced with future logic
     valid_keys = ["your-api-key-here"]  # Store in environment variables
     if x_api_key not in valid_keys:
         raise HTTPException(
