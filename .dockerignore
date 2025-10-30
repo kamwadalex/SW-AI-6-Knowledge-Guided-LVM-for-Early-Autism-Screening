@@ -1,59 +1,13 @@
-# Git
 .git
 .gitignore
-.gitattributes
-
-# Python
 __pycache__
 *.pyc
-*.pyo
-*.pyd
-.Python
-*.so
-*.egg
-*.egg-info
-dist
-build
-
-# Virtual environments
-venv/
-env/
-ENV/
 .venv
-
-# IDE
-.vscode/
-.idea/
-*.swp
-*.swo
-*~
-.DS_Store
-
-# Documentation
-*.md
-!README.md
-
-# Cache and temp files
-*.cache
-*.tmp
-.cache/
-.pytest_cache/
-.coverage
-htmlcov/
-
-# Jupyter
-.ipynb_checkpoints
-*.ipynb
-
-# Logs
+venv
+.env
 *.log
-logs/
-
-# Data
-data/
-*.csv
-!knowledge_corpus.csv
-
-# Conceptual Foundations (not needed in production)
-Conceptual_Foundations/
+.DS_Store
+.cursor
+.idea
+.vscode
 

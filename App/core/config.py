@@ -1,47 +1,31 @@
-# app/core/config.py
-from pydantic_settings import BaseSettings
-from typing import List, Dict, Any, Optional
 import os
+from functools import lru_cache
 
-class Settings(BaseSettings):
-    # API Settings
-    API_TITLE: str = "Autism Screening API"
-    API_VERSION: str = "1.0.0"
-    API_DESCRIPTION: str = "Multimodal AI system for autism screening using computer vision"
-    
-    # Server Settings
-    HOST: str = "0.0.0.0"
-    PORT: int = 8000
-    RELOAD: bool = False  # Set to True for development
-    
-    # Model paths
-    TSN_MODEL_PATH: str = "model_weights/tsn_optical_flow.pth"
-    SGCN_MODEL_PATH: str = "model_weights/sgcn_2d.pth"
-    STGCN_MODEL_PATH: str = "model_weights/stgcn_3d.pth"
-    FUSION_MODEL_PATH: str = "model_weights/fusion.pkl"
-    
-    # Video processing
-    FRAME_SIZE: tuple = (224, 224)
-    MAX_VIDEO_SIZE: int = 100 * 1024 * 1024  # 100MB
-    ALLOWED_EXTENSIONS: List[str] = [".mp4", ".avi", ".mov", ".mkv"]
-    
-    # Model-specific parameters
-    TSN_NUM_FRAMES: int = 10
-    SGCN_NUM_FRAMES: int = 4
-    STGCN_NUM_FRAMES: int = 32
-    
-    # Inference settings
-    DEVICE: str = "cuda"
-    BATCH_SIZE: int = 1
-    
-    # Security
-    API_KEYS: List[str] = []  # Add your API keys here
-    
-    # CORS
-    CORS_ORIGINS: List[str] = ["*"]
-    
-    class Config:
-        case_sensitive = True
-        env_file = ".env"
 
-settings = Settings()
+class Settings:
+	app_name: str = os.getenv("APP_NAME", "SW-AI-6 API")
+	environment: str = os.getenv("ENVIRONMENT", "development")
+	log_level: str = os.getenv("LOG_LEVEL", "INFO")
+	allow_origins: str = os.getenv("ALLOW_ORIGINS", "*")
+	port: int = int(os.getenv("PORT", "8000"))
+	host: str = os.getenv("HOST", "0.0.0.0")
+
+	# Model/device config
+	device: str = os.getenv("DEVICE", "auto")  # auto|cpu|cuda
+	model_tsn_path: str = os.getenv("MODEL_TSN_PATH", "model_weights/tsn_optical_flow.pth")
+	model_sgcn_path: str = os.getenv("MODEL_SGCN_PATH", "model_weights/sgcn_2d.pth")
+	model_stgcn_path: str = os.getenv("MODEL_STGCN_PATH", "model_weights/stgcn_3d.pth")
+	model_fusion_path: str = os.getenv("MODEL_FUSION_PATH", "model_weights/fusion.pkl")
+
+	# Knowledge corpus (optional CSV)
+	knowledge_corpus_path: str = os.getenv("KNOWLEDGE_CORPUS_PATH", "knowledge_corpus.csv")
+
+	# Severity bands mapping (thresholds inclusive ranges)
+	severity_bands: str = os.getenv("SEVERITY_BANDS", "0-2:Minimal,3-4:Low,5-7:Moderate,8-10:High")
+
+
+@lru_cache(maxsize=1)
+def get_settings() -> Settings:
+	return Settings()
+
+

@@ -1,275 +1,125 @@
-```markdown
-# Autism Screening System
+## SW-AI-6 FastAPI Service
 
-A multimodal AI system for early autism screening using computer vision and machine learning. This system analyzes video inputs through three specialized models and provides clinically-informed assessments with explainable outputs.
+Knowledge-Guided LVM API for early autism screening. Includes video upload UI, on-the-fly feature extraction (optical flow, 2D pose, 3D pose with ROMP fallback), three-model inference (TSN/SGCN/ST-GCN), score fusion, knowledge-guided explanations, and PDF report generation.
 
-## 🎯 Overview
+### Run locally (Windows PowerShell)
 
-This system combines optical flow analysis, 2D/3D skeleton tracking, and knowledge-guided reasoning to screen for autism spectrum disorder indicators. It outputs ADOS (Autism Diagnostic Observation Schedule) comparison scores with clinical domain explanations.
-
-```
-System Architecture:
-Raw Video → [TSN + SGCN + ST-GCN] → Fusion Meta-Regressor → Clinical Report
-```
-
-## 🏗️ System Architecture
-
-### Model Pipeline
-- **TSN (Temporal Segment Networks)**: Optical flow analysis for social communication patterns
-- **SGCN (Spatial Graph CNN)**: 2D skeleton analysis for body posture and gestures  
-- **ST-GCN (Spatial-Temporal Graph CNN)**: 3D skeleton analysis for complex behavioral sequences
-- **Fusion Meta-Regressor**: Gradient Boosting model that combines all predictions
-- **Knowledge Guidance**: Maps predictions to clinical domains with explanations
-
-### Technical Specifications
-| Model | Parameters | Input Shape | Focus Areas |
-|-------|------------|-------------|-------------|
-| TSN | 11.27M | [1, 10, 3, 224, 224] | Social Communication |
-| SGCN | 41.7K | [1, 4, 24, 2] | Body Posture |
-| ST-GCN | 501K | [1, 3, 32, 24] | Temporal Patterns |
-| Fusion | 5K | [3] | Model Integration |
-
-## 🚀 Quick Start
-
-### Prerequisites
-- Python 3.8+
-- CUDA-capable GPU (recommended)
-- 4GB+ GPU memory
-
-### Installation
-
-1. **Clone the repository**
-```bash
-git clone https://github.com/your-org/autism-screening-system.git
-cd autism-screening-system
-```
-
-2. **Install dependencies**
-```bash
+```powershell
+python -m venv .venv
+.\.venv\Scripts\Activate.ps1
 pip install -r requirements.txt
+set APP_NAME="SW-AI-6 API"
+set ENVIRONMENT=development
+set LOG_LEVEL=INFO
+set ALLOW_ORIGINS=*
+uvicorn app.main:app --reload --host 127.0.0.1 --port 8000
 ```
 
-3. **Download model weights**
-```bash
-# Place these in model_weights/ directory:
-# - tsn_optical_flow.pth
-# - sgcn_2d.pth  
-# - stgcn_3d.pth
-# - fusion.pkl
-# - knowledge_corpus.csv
+Open `http://localhost:8000/api/v1/ui` for the web UI, or `http://localhost:8000/docs` for interactive docs.
+
+Notes:
+- Upload size limit: 100 MB
+- GPU recommended; install torch/torchvision matching your CUDA on target
+
+### Endpoints
+
+- `GET /health` – liveness
+- `GET /ready` – readiness
+- `GET /api/v1/ui` – web interface (upload video, view results, download PDF)
+- `POST /api/v1/infer` – run inference on uploaded video (multipart)
+- `POST /api/v1/report/{report_id}` – generate PDF from a summary JSON
+- `GET /api/v1/report/{report_id}` – download generated PDF
+
+### Container build and run
+
+```powershell
+docker build -t sw-ai-6-api .
+docker run --rm -p 8000:8000 -e LOG_LEVEL=INFO sw-ai-6-api
 ```
 
-### Usage
+### Configuration (env vars)
 
-1. **Start the API server**
-```bash
-uvicorn app.main:app --host 0.0.0.0 --port 8000
+- `APP_NAME` – service name
+- `ENVIRONMENT` – e.g. `development` | `production`
+- `LOG_LEVEL` – `DEBUG` | `INFO` | `WARNING` | `ERROR`
+- `ALLOW_ORIGINS` – comma-separated origins for CORS
+- `HOST`, `PORT` – server bind
+- `DEVICE` – `auto` | `cpu` | `cuda`
+- `MODEL_TSN_PATH` – default `model_weights/tsn_optical_flow.pth`
+- `MODEL_SGCN_PATH` – default `model_weights/sgcn_2d.pth`
+- `MODEL_STGCN_PATH` – default `model_weights/stgcn_3d.pth`
+- `MODEL_FUSION_PATH` – default `model_weights/fusion.pkl`
+- `KNOWLEDGE_CORPUS_PATH` – optional CSV with columns: `Linked_Model,Category,Description,Severity_Indicator,Clinical_References`
+- `SEVERITY_BANDS` – default `0-2:Minimal,3-4:Low,5-7:Moderate,8-10:High`
+
+### Deploying to cloud (generic)
+
+1. Build the image and push to your registry.
+2. Deploy a container service (Render, Fly.io, Azure Container Apps, AWS ECS/Fargate, etc.).
+3. Set env vars in your provider.
+4. Expose port `8000` with HTTP load balancer.
+
+Torch/vision on GPU:
+- The `requirements.txt` does not pin torch/torchvision. Install them separately to match your cloud GPU/CUDA, e.g. (CUDA 12.1):
+```powershell
+pip install --index-url https://download.pytorch.org/whl/cu121 torch torchvision torchaudio
+```
+For CPU-only:
+```powershell
+pip install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cpu
 ```
 
-2. **Access the web interface**
-```
-http://localhost:8000
-```
+### Project structure
 
-3. **Upload a video for analysis**
-- Supported formats: MP4, AVI, MOV, MKV
-- Maximum size: 100MB
-- Recommended length: 5-30 seconds
-
-## 📁 Project Structure
-
-```
-autism-screening-system/
-├── app/
-│   ├── main.py                 # FastAPI application entry point
-│   ├── api/
-│   │   ├── endpoints.py        # Basic API endpoints
-│   │   └── enhanced_endpoints.py # Knowledge-guided endpoints
-│   ├── models/
-│   │   ├── predictor.py        # Main prediction pipeline
-│   │   ├── enhanced_predictor.py # With knowledge guidance
-│   │   ├── model_loader.py     # Model loading and management
-│   │   ├── stgcn.py           # ST-GCN architecture
-│   │   └── graph_utils.py     # Graph construction utilities
-│   ├── services/
-│   │   ├── video_processor.py  # Video processing and feature extraction
-│   │   ├── optical_flow.py    # Optical flow computation
-│   │   └── knowledge_guide.py # Clinical domain mapping
-│   ├── core/
-│   │   ├── config.py          # Application configuration
-│   │   ├── models.py          # Pydantic models for API
-│   │   └── enhanced_models.py # Enhanced response models
-│   └── static/
-│       └── index.html         # Web interface
-├── model_weights/             # Trained model files
-├── tests/                     # Test suite
-├── requirements.txt           # Python dependencies
-├── Dockerfile                # Container configuration
-└── docker-compose.yml        # Multi-container setup
+```text
+app/
+  api/
+    v1/
+      endpoints/
+        example.py
+        health.py
+        inference.py
+        report.py
+        ui.py
+      __init__.py
+      api.py
+    __init__.py
+  core/
+    config.py
+    logging.py
+  middleware/
+    limits.py
+  services/
+    feature_extraction.py
+    fusion.py
+    knowledge.py
+    knowledge_guidance.py
+    models/
+      tsn.py
+      sgcn.py
+      stgcn.py
+    pipeline.py
+  __init__.py
+  main.py
+Dockerfile
+requirements.txt
+.dockerignore
+README.md
+model_weights/
+knowledge_corpus.csv (optional)
 ```
 
-## 🔌 API Documentation
+### Using the UI
+1) Navigate to `http://localhost:8000/api/v1/ui`
+2) Choose a video (≤ 100 MB). Optionally tick “Use mock scores” for a quick demo.
+3) Click Run Inference. The JSON results render inline.
+4) A “Download PDF report” link appears after PDF generation.
 
-### Basic Screening Endpoint
-```bash
-POST /api/v1/screen
-Content-Type: multipart/form-data
+### Knowledge Guidance
+- If `KNOWLEDGE_CORPUS_PATH` is set, clinical domains and references are read from the CSV.
+- Otherwise, sensible defaults are used to map TSN/SGCN/ST-GCN to domains.
 
-Body: video file
-```
+### Notes on ROMP
+- 3D pose uses ROMP if available. If ROMP import fails, a safe fallback keeps the pipeline running. You can later integrate a lighter 3D estimator if needed.
 
-**Response:**
-```json
-{
-  "prediction": {
-    "final_score": 6.42,
-    "severity": "High Risk",
-    "confidence": 0.82
-  },
-  "component_analysis": {
-    "optical_flow": 5.23,
-    "skeleton_2d": 6.87,
-    "skeleton_3d": 4.56
-  },
-  "interpretation": {
-    "severity": "High Risk",
-    "description": "Moderate autism symptoms",
-    "recommendation": "Recommend comprehensive diagnostic assessment"
-  }
-}
-```
-
-### Enhanced Screening with Explanations
-```bash
-POST /api/v1/screen-with-explanation
-```
-
-**Enhanced response includes:**
-```json
-{
-  "knowledge_guided_explanation": {
-    "base_explanation": "Score 6.42 — driven mainly by SGCN, ST-GCN models...",
-    "risk_level": "High Risk",
-    "dominant_models": ["SGCN", "ST-GCN"],
-    "domains": [
-      {
-        "domain": "Social Communication & Interaction",
-        "description": "Difficulties in social-emotional reciprocity",
-        "clinical_reference": "ADOS-2: Social Affect domain"
-      }
-    ],
-    "clinical_recommendations": [
-      "Recommend comprehensive diagnostic assessment",
-      "Evaluate restricted and repetitive behaviors"
-    ]
-  }
-}
-```
-
-## 🧪 Testing
-
-Run the test suite:
-```bash
-# Run all tests
-pytest
-
-# Run with coverage
-pytest --cov=app --cov-report=html
-
-# Run specific test categories
-pytest tests/test_models/ -v
-pytest tests/test_api/ -v
-pytest tests/test_services/ -v
-```
-
-## 🐳 Docker Deployment
-
-### Using Docker Compose
-```bash
-docker-compose up -d
-```
-
-### Manual Docker Build
-```bash
-docker build -t autism-screening .
-docker run -p 8000:8000 autism-screening
-```
-
-## 🏥 Clinical Interpretation
-
-### ADOS Score Ranges
-- **1.0-3.0**: Low Risk - Minimal evidence of autism symptoms
-- **3.1-5.0**: Mild Risk - Mild autism symptoms present  
-- **5.1-7.0**: High Risk - Moderate autism symptoms
-- **7.1-10.0**: Very High Risk - Significant autism symptoms
-
-### Clinical Domains
-- **Social Communication & Interaction**: TSN, SGCN models
-- **Early Social Attention**: SGCN model
-- **Object & Repetitive Behaviors**: ST-GCN model
-- **Motor Development**: ST-GCN model
-
-## ⚙️ Configuration
-
-Environment variables (`.env` file):
-```env
-# Model paths
-TSN_MODEL_PATH=model_weights/tsn_optical_flow.pth
-SGCN_MODEL_PATH=model_weights/sgcn_2d.pth
-STGCN_MODEL_PATH=model_weights/stgcn_3d.pth
-FUSION_MODEL_PATH=model_weights/fusion.pkl
-
-# Server settings
-DEVICE=cuda
-HOST=0.0.0.0
-PORT=8000
-
-# Video processing
-MAX_VIDEO_SIZE=104857600  # 100MB
-ALLOWED_EXTENSIONS=.mp4,.avi,.mov,.mkv
-```
-
-## 📊 Performance
-
-- **Inference Time**: 2-5 seconds per video (GPU)
-- **Accuracy**: R² ~0.65-0.75 on ADOS scores
-- **Model Size**: ~50MB total
-- **Supported Resolutions**: 224×224 to 1920×1080
-
-## 🎓 Training Data
-
-This system was trained on the **MMASD** (Multimodal Autism Screening Dataset):
-- 32 children with ASD
-- 1,315 video samples
-- 100+ hours of therapy sessions
-- ADOS comparison scores (1-10)
-
-## ⚠️ Important Notes
-
-- **Screening Tool**: This is an assistive screening tool, not a diagnostic system
-- **Clinical Oversight**: Always consult healthcare professionals for diagnosis
-- **Data Privacy**: No video data is stored permanently
-- **Resource Requirements**: GPU recommended for real-time performance
-
-
-
-## 🙏 Acknowledgments
-
-- MMASD dataset providers
-- Clinical advisors for domain expertise
-- Open-source computer vision libraries
-- Research collaborators
-
-## 🆘 Support
-
-For technical issues:
-- Create an issue on GitHub
-- Check existing documentation
-- Review test cases for usage examples
-
-For clinical questions:
-- Consult with licensed healthcare providers
-- Refer to ADOS-2 assessment manuals
-- Review autism screening guidelines
-```
 
