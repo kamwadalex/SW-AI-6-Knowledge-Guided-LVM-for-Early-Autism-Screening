@@ -8,6 +8,6 @@ joblib==1.4.2
 reportlab==4.2.2
 opencv-python-headless==4.10.0.84
 mediapipe==0.10.14
-# Note: Install torch/torchvision with appropriate CUDA build on the target environment
 numpy==1.26.4
+# torch and torchvision installed separately from CPU-only index in Dockerfile
 
