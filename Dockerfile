@@ -18,7 +18,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 	&& rm -rf /var/lib/apt/lists/*
 
 # Install pip and CPU-only torch/torchvision first
-RUN pip install --upgrade pip && \
+RUN pip install --upgrade pip setuptools wheel && \
 	pip install --no-cache-dir --index-url https://download.pytorch.org/whl/cpu torch torchvision
 
 # Install remaining requirements
