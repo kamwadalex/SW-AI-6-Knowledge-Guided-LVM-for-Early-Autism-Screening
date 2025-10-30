@@ -54,4 +54,5 @@ jobs:
 
     - name: Output image info
       if: github.event_name != 'pull_request'
-      run: echo "Image pushed: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}"
+      run: |
+        echo "Image pushed: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}"
