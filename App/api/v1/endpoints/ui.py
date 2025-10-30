@@ -65,6 +65,21 @@ def ui_page(request: Request) -> str:
 				ul.compact { margin: 6px 0 0 18px; padding: 0; }
 				ul.compact li { margin: 4px 0; }
 				#pdf-section a:hover { text-decoration: underline; }
+				/* Responsive adjustments */
+				@media (max-width: 640px) {
+					.container { margin: 20px auto; padding: 0 12px; }
+					.title { font-size: 18px; }
+					.hero { padding: 14px; }
+					.hero h1 { font-size: 18px; }
+					.card { padding: 16px; }
+					.actions { flex-direction: column; align-items: stretch; gap: 8px; }
+					.btn { width: 100%; padding: 12px 14px; }
+					.status { justify-content: center; }
+					.kv { grid-template-columns: 1fr; }
+					label { font-size: 13px; }
+					input[type="file"] { padding: 12px; font-size: 14px; }
+					pre#result { max-height: 300px; font-size: 12px; }
+				}
 			</style>
 		</head>
 		<body>
@@ -99,24 +114,18 @@ def ui_page(request: Request) -> str:
 					<div class="section"> 
 						<h3>Results</h3>
 						<div id="readable" class="readable"></div>
-						<details style="margin-top:10px;"> 
-							<summary style="cursor:pointer; color:#93c5fd;">View raw JSON</summary>
-							<pre id="result" style="margin-top:8px;"></pre>
-						</details>
 					</div>
 				</div>
 
-				<div class="section" style="margin-top:16px;">
-					<label class="checkbox"><input id="use-mock" type="checkbox"> Use mock data (quick demo, no upload required)</label>
+				<div class="section" style="margin-top:16px">
+					
 				</div>
 			</div>
 
 			<script>
 			const form = document.getElementById('infer-form');
-				const out = document.getElementById('result');
 				const readable = document.getElementById('readable');
 				const pdfSec = document.getElementById('pdf-section');
-				const useMock = document.getElementById('use-mock');
 			const spin = document.getElementById('spin');
 			const st = document.getElementById('status-text');
 			const sevRow = document.getElementById('severity-row');
@@ -162,21 +171,18 @@ def ui_page(request: Request) -> str:
 
 				form.addEventListener('submit', async (e) => {
 			  e.preventDefault();
-				  out.textContent = '';
 				  readable.innerHTML = '';
 			  pdfSec.innerHTML = '';
 			  sevRow.innerHTML = '';
 			  spin.style.display = 'inline-block';
 			  st.textContent = 'Running inference...';
 			  const fd = new FormData(form);
-              if (useMock && useMock.checked) { fd.append('use_mock', 'true'); }
 			  try {
 			    const resp = await fetch('/api/v1/infer', { method: 'POST', body: fd });
 			    const json = await resp.json();
 			    if (!resp.ok) throw new Error(json.detail || 'Inference failed');
 				    const summary = json.summary || {};
 				    readable.innerHTML = renderReadable(summary);
-				    out.textContent = JSON.stringify(summary, null, 2);
 
 			    // Severity badge
 			    const sev = (summary.scores && summary.scores.severity) || summary.severity;
@@ -207,7 +213,7 @@ def ui_page(request: Request) -> str:
 			      st.textContent = 'Completed (PDF failed)';
 			    }
 			  } catch (err) {
-			    out.textContent = 'Error: ' + err.message;
+			    pdfSec.textContent = 'Error: ' + err.message;
 			    st.textContent = 'Error';
 			  } finally {
 			    spin.style.display = 'none';
