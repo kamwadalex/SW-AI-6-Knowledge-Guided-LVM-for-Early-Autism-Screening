@@ -46,14 +46,22 @@ async def infer(video: UploadFile = File(...), use_mock: bool = Form(default=Fal
 
 
 def _categorize_severity(score: float, bands: str) -> str:
-	for part in bands.split(","):
-		range_part, label = part.split(":")
-		lo, hi = range_part.split("-")
-		try:
-			if float(lo) <= score <= float(hi):
-				return label
-		except Exception:
-			continue
-	return "Unknown"
+    parts = [p.strip() for p in bands.split(",") if p.strip()]
+    for idx, part in enumerate(parts):
+        try:
+            range_part, label = [s.strip() for s in part.split(":", 1)]
+            lo_s, hi_s = [s.strip() for s in range_part.split("-", 1)]
+            lo, hi = float(lo_s), float(hi_s)
+            if idx < len(parts) - 1:
+                # Lower inclusive, upper exclusive
+                if lo <= score < hi:
+                    return label
+            else:
+                # Last band: upper inclusive
+                if lo <= score <= hi:
+                    return label
+        except Exception:
+            continue
+    return "Unknown"
 
 

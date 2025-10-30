@@ -1,5 +1,6 @@
 from pathlib import Path
 from typing import Dict, Tuple
+import math
 
 import numpy as np
 
@@ -29,6 +30,11 @@ class InferencePipeline:
 		# 2) Optical flow → TSN
 		flow_rgb = self.features.compute_optical_flow(frames)
 		tsn_score = self.tsn.predict_from_flow_rgb_stack(flow_rgb, device=self.device)
+		# Map TSN raw output to 0–10 using sigmoid for user-facing consistency
+		try:
+			tsn_score = 10.0 / (1.0 + math.exp(-float(tsn_score)))
+		except Exception:
+			pass
 		# 3) 2D skeleton → SGCN
 		seq2d = np.array(self.features.extract_2d_pose(frames), dtype=np.float32)  # (T,24,2)
 		seq2d = self.features.normalize_2d(seq2d)

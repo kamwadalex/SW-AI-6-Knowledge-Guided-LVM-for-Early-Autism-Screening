@@ -105,7 +105,11 @@ class KnowledgeGuidanceService:
 	def generate_base_explanation(self, final_score: float, dominant_models: List[str], domains: Dict[str, DomainInfo]) -> str:
 		model_names = ", ".join(dominant_models) if dominant_models else "no dominant model"
 		domain_names = ", ".join(domains.keys()) if domains else "no mapped domains"
-		return f"Score {final_score:.2f} — driven mainly by {model_names} models (domains: {domain_names})."
+		try:
+			fs = float(final_score)
+			return f"Score {fs:.2f} — driven mainly by {model_names} models (domains: {domain_names})."
+		except Exception:
+			return f"Score {final_score} — driven mainly by {model_names} models (domains: {domain_names})."
 
 	def calculate_confidence(self, tsn: float, sgcn: float, stgcn: float, fused: float) -> float:
 		arr = np.array([tsn, sgcn, stgcn], dtype=np.float32)

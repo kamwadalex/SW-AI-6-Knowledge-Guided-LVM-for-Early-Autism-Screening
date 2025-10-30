@@ -1,6 +1,6 @@
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Dict, List
+from typing import Dict, List, Any
 
 
 @dataclass
@@ -36,18 +36,29 @@ class ReportService:
 		c.drawString(50, y, "Autism Screening Report")
 		y -= 30
 		c.setFont("Helvetica", 11)
-		for k, v in summary.get("scores", {}).items():
-			c.drawString(50, y, f"{k.upper()} score: {v:.3f}")
-			y -= 16
-		c.drawString(50, y, f"Fused score: {summary.get('fused_score', 0.0):.3f}")
+
+		def fmt(value: Any, decimals: int = 3) -> str:
+			try:
+				f = float(value)
+				# Avoid scientific notation and force fixed decimals
+				return f"{f:.{decimals}f}"
+			except Exception:
+				return str(value)
+
+		# Severity and scores
+		severity = (summary.get("scores", {}) or {}).get("severity") or summary.get("severity")
+		if severity is not None:
+			c.drawString(50, y, f"Severity: {severity}")
+			y -= 18
+		scores = summary.get("scores", {}) or {}
+		for key in ("tsn", "sgcn", "stgcn"):
+			if key in scores:
+				c.drawString(50, y, f"{key.upper()} score: {fmt(scores.get(key))}")
+				y -= 16
+		c.drawString(50, y, f"Fused score: {fmt(summary.get('fused_score', 'N/A'))}")
 		y -= 24
 		kg = summary.get("knowledge_guidance", {}) or {}
-		severity = summary.get("scores", {}).get("severity") or summary.get("severity")
-		if severity:
-			c.drawString(50, y, f"Severity: {severity}"); y -= 18
-		conf = kg.get("confidence", {})
-		if conf:
-			c.drawString(50, y, f"Confidence: {conf.get('label', '')} ({conf.get('value', 0)})"); y -= 18
+		# Confidence is kept in JSON but not rendered in PDF
 		if kg:
 			c.setFont("Helvetica-Bold", 12)
 			c.drawString(50, y, "Knowledge Guidance")

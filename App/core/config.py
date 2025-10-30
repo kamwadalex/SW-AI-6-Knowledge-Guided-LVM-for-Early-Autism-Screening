@@ -20,8 +20,8 @@ class Settings:
 	# Knowledge corpus (optional CSV)
 	knowledge_corpus_path: str = os.getenv("KNOWLEDGE_CORPUS_PATH", "knowledge_corpus.csv")
 
-	# Severity bands mapping (thresholds inclusive ranges)
-	severity_bands: str = os.getenv("SEVERITY_BANDS", "0-2:Minimal,3-4:Low,5-7:Moderate,8-10:High")
+	# Severity bands mapping (contiguous ranges). Lower inclusive; upper exclusive, except last band upper inclusive.
+	severity_bands: str = os.getenv("SEVERITY_BANDS", "0-2:Minimal,2-4:Low,4-7:Moderate,7-10:High")
 
 
 @lru_cache(maxsize=1)

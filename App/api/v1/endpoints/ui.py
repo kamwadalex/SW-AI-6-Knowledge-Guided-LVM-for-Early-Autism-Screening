@@ -18,22 +18,26 @@ def ui_page(request: Request) -> str:
 			<title>SW-AI-6 Inference</title>
 			<style>
 				:root {
-					--bg: #0f172a;
-					--card: #111827;
+					--bg: #0a1224;
+					--bg-accent: radial-gradient(1200px 600px at 20% -10%, rgba(56,189,248,0.08), transparent), radial-gradient(1000px 400px at 120% 10%, rgba(99,102,241,0.06), transparent);
+					--card: #0f172a;
 					--text: #e5e7eb;
 					--muted: #9ca3af;
-					--primary: #2563eb;
-					--primary-600: #1d4ed8;
+					--primary: #22d3ee; /* cyan-400 */
+					--primary-600: #06b6d4; /* cyan-500 */
 					--success: #10b981;
 					--warning: #f59e0b;
 					--danger: #ef4444;
 					--border: #1f2937;
 				}
 				* { box-sizing: border-box; }
-				body { margin: 0; background: var(--bg); color: var(--text); font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, "Apple Color Emoji", "Segoe UI Emoji"; }
+				body { margin: 0; background: var(--bg); background-image: var(--bg-accent); color: var(--text); font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, "Apple Color Emoji", "Segoe UI Emoji"; }
 				.container { max-width: 980px; margin: 40px auto; padding: 0 20px; }
 				.header { display:flex; align-items:center; justify-content:space-between; margin-bottom: 20px; }
 				.title { font-size: 22px; font-weight: 700; letter-spacing: 0.3px; }
+				.hero { background: linear-gradient(180deg, rgba(255,255,255,0.03), rgba(255,255,255,0.02)); border: 1px solid var(--border); border-radius: 14px; padding: 18px 20px; margin-bottom: 16px; }
+				.hero h1 { margin: 0 0 8px 0; font-size: 20px; }
+				.hero p { margin: 0; color: var(--muted); }
 				.card { background: linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01)); border: 1px solid var(--border); border-radius: 14px; padding: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.25); }
 				.form-grid { display:grid; grid-template-columns: 1fr; gap:16px; }
 				label { font-size: 14px; color: var(--muted); }
@@ -68,35 +72,42 @@ def ui_page(request: Request) -> str:
 				<div class=\"header\">
 					<div class=\"title\">SW-AI-6 • Knowledge-Guided Autism Screening</div>
 				</div>
-				<div class=\"card\">
-					<form id=\"infer-form\" enctype=\"multipart/form-data\">
-						<div class=\"form-grid\">
-							<label class=\"checkbox\"><input type=\"checkbox\" name=\"use_mock\" value=\"true\"> whelcome to the advanced autism screening knowlege guided service </label>
+				<div class="hero">
+					<h1>Early Autism Screening Assistant</h1>
+					<p>Upload a short video to receive a preliminary, knowledge-guided screening summary with severity, confidence, and domain highlights. This is an assistive tool and not a medical diagnosis.</p>
+				</div>
+				<div class="card">
+					<form id="infer-form" enctype="multipart/form-data">
+						<div class="form-grid">
 							<div>
 								<label>Upload video (max 100MB)</label>
-								<input type=\"file\" name=\"video\" accept=\"video/*\" required>
+								<input type="file" name="video" accept="video/*" required>
 							</div>
-							<div class=\"actions\">
-								<button class=\"btn\" type=\"submit\">Run Inference</button>
-								<div class=\"status\"><span class=\"spinner\" id=\"spin\"></span><span id=\"status-text\">Idle</span></div>
+							<div class="actions">
+								<button class="btn" type="submit">Run Inference</button>
+								<div class="status"><span class="spinner" id="spin"></span><span id="status-text">Idle</span></div>
 							</div>
 						</div>
 					</form>
 
-					<div class=\"section\">
+					<div class="section">
 						<h3>Severity & Report</h3>
-						<div id=\"severity-row\"></div>
-						<div id=\"pdf-section\" style=\"margin-top:8px;\"></div>
+						<div id="severity-row"></div>
+						<div id="pdf-section" style="margin-top:8px;"></div>
 					</div>
 
-					<div class=\"section\"> 
+					<div class="section"> 
 						<h3>Results</h3>
-						<div id=\"readable\" class=\"readable\"></div>
-						<details style=\"margin-top:10px;\"> 
-							<summary style=\"cursor:pointer; color:#93c5fd;\">View raw JSON</summary>
-							<pre id=\"result\" style=\"margin-top:8px;\"></pre>
+						<div id="readable" class="readable"></div>
+						<details style="margin-top:10px;"> 
+							<summary style="cursor:pointer; color:#93c5fd;">View raw JSON</summary>
+							<pre id="result" style="margin-top:8px;"></pre>
 						</details>
 					</div>
+				</div>
+
+				<div class="section" style="margin-top:16px;">
+					<label class="checkbox"><input id="use-mock" type="checkbox"> Use mock data (quick demo, no upload required)</label>
 				</div>
 			</div>
 
@@ -105,6 +116,7 @@ def ui_page(request: Request) -> str:
 				const out = document.getElementById('result');
 				const readable = document.getElementById('readable');
 				const pdfSec = document.getElementById('pdf-section');
+				const useMock = document.getElementById('use-mock');
 			const spin = document.getElementById('spin');
 			const st = document.getElementById('status-text');
 			const sevRow = document.getElementById('severity-row');
@@ -129,9 +141,6 @@ def ui_page(request: Request) -> str:
 				  const fused = typeof summary.fused_score === 'number' ? summary.fused_score.toFixed(3) : (summary.fused_score ?? 'N/A');
 				  const severity = scores.severity || summary.severity || 'Unknown';
 				  const kg = summary.knowledge_guidance || {};
-				  const conf = kg.confidence || {};
-				  const confLabel = conf.label || 'N/A';
-				  const confVal = (conf.value ?? '');
 				  const base = kg.base_explanation || '';
 				  const domains = kg.domains || {};
 				  const domainItems = Object.entries(domains).slice(0, 6).map(([name, info]) => {
@@ -139,7 +148,15 @@ def ui_page(request: Request) -> str:
 				    return `<li><strong>${name}</strong>: ${desc}</li>`;
 				  }).join('');
 				  return `
-				    <div class=\"kv\">\n\t\t\t\t      <div><strong>Severity</strong></div><div>${severity}</div>\n\t\t\t\t      <div><strong>Fused score</strong></div><div>${fused}</div>\n\t\t\t\t      <div><strong>TSN score</strong></div><div>${tsn}</div>\n\t\t\t\t      <div><strong>SGCN score</strong></div><div>${sgcn}</div>\n\t\t\t\t      <div><strong>ST-GCN score</strong></div><div>${stgcn}</div>\n\t\t\t\t      <div><strong>Confidence</strong></div><div>${confLabel}${confVal !== '' ? ` (${confVal})` : ''}</div>\n\t\t\t\t    </div>\n\t\t\t\t    ${base ? `<div style=\\"margin-top:10px;\\"><strong style=\\"color: var(--muted);\\">Summary</strong><div style=\\"margin-top:6px;\\">${base}</div></div>` : ''}\n\t\t\t\t    ${domainItems ? `<div style=\\"margin-top:10px;\\"><strong style=\\"color: var(--muted);\\">Domains</strong><ul class=\\"compact\\">${domainItems}</ul></div>` : ''}
+				    <div class="kv">
+				      <div><strong>Severity</strong></div><div>${severity}</div>
+				      <div><strong>Fused score</strong></div><div>${fused}</div>
+				      <div><strong>TSN score</strong></div><div>${tsn}</div>
+				      <div><strong>SGCN score</strong></div><div>${sgcn}</div>
+				      <div><strong>ST-GCN score</strong></div><div>${stgcn}</div>
+				    </div>
+				    ${base ? `<div style="margin-top:10px;"><strong style="color: var(--muted);">Summary</strong><div style="margin-top:6px;">${base}</div></div>` : ''}
+				    ${domainItems ? `<div style="margin-top:10px;"><strong style="color: var(--muted);">Domains</strong><ul class="compact">${domainItems}</ul></div>` : ''}
 				  `;
 				}
 
@@ -152,6 +169,7 @@ def ui_page(request: Request) -> str:
 			  spin.style.display = 'inline-block';
 			  st.textContent = 'Running inference...';
 			  const fd = new FormData(form);
+              if (useMock && useMock.checked) { fd.append('use_mock', 'true'); }
 			  try {
 			    const resp = await fetch('/api/v1/infer', { method: 'POST', body: fd });
 			    const json = await resp.json();
