@@ -11,3 +11,17 @@ venv
 .idea
 .vscode
 
+# Build/deploy hygiene
+uploads/
+reports/
+*.mp4
+*.mov
+*.avi
+*.mkv
+.pytest_cache/
+.mypy_cache/
+.cache/
+node_modules/
+dist/
+build/
+*.ipynb_checkpoints/
