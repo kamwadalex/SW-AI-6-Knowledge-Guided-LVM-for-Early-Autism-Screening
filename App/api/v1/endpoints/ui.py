@@ -54,6 +54,12 @@ def ui_page(request: Request) -> str:
 				.badge.danger { background: rgba(239,68,68,.15); color: #f87171; }
 				.badge.info { background: rgba(37,99,235,.15); color: #60a5fa; }
 				#pdf-section a { color: #93c5fd; text-decoration: none; font-weight: 600; }
+				.readable { padding:14px; border:1px solid var(--border); background: rgba(255,255,255,0.02); border-radius:12px; }
+				.kv { display:grid; grid-template-columns: 180px 1fr; gap:10px; }
+				.kv div { padding:6px 0; border-bottom: 1px dashed var(--border); }
+				.kv div strong { color: var(--muted); font-weight: 600; }
+				ul.compact { margin: 6px 0 0 18px; padding: 0; }
+				ul.compact li { margin: 4px 0; }
 				#pdf-section a:hover { text-decoration: underline; }
 			</style>
 		</head>
@@ -83,17 +89,22 @@ def ui_page(request: Request) -> str:
 						<div id=\"pdf-section\" style=\"margin-top:8px;\"></div>
 					</div>
 
-					<div class=\"section\">
-						<h3>Results (JSON)</h3>
-						<pre id=\"result\"></pre>
+					<div class=\"section\"> 
+						<h3>Results</h3>
+						<div id=\"readable\" class=\"readable\"></div>
+						<details style=\"margin-top:10px;\"> 
+							<summary style=\"cursor:pointer; color:#93c5fd;\">View raw JSON</summary>
+							<pre id=\"result\" style=\"margin-top:8px;\"></pre>
+						</details>
 					</div>
 				</div>
 			</div>
 
 			<script>
 			const form = document.getElementById('infer-form');
-			const out = document.getElementById('result');
-			const pdfSec = document.getElementById('pdf-section');
+				const out = document.getElementById('result');
+				const readable = document.getElementById('readable');
+				const pdfSec = document.getElementById('pdf-section');
 			const spin = document.getElementById('spin');
 			const st = document.getElementById('status-text');
 			const sevRow = document.getElementById('severity-row');
@@ -110,9 +121,32 @@ def ui_page(request: Request) -> str:
 			  return span;
 			}
 
-			form.addEventListener('submit', async (e) => {
+				function renderReadable(summary) {
+				  const scores = summary.scores || {};
+				  const tsn = typeof scores.tsn === 'number' ? scores.tsn.toFixed(3) : (scores.tsn ?? 'N/A');
+				  const sgcn = typeof scores.sgcn === 'number' ? scores.sgcn.toFixed(3) : (scores.sgcn ?? 'N/A');
+				  const stgcn = typeof scores.stgcn === 'number' ? scores.stgcn.toFixed(3) : (scores.stgcn ?? 'N/A');
+				  const fused = typeof summary.fused_score === 'number' ? summary.fused_score.toFixed(3) : (summary.fused_score ?? 'N/A');
+				  const severity = scores.severity || summary.severity || 'Unknown';
+				  const kg = summary.knowledge_guidance || {};
+				  const conf = kg.confidence || {};
+				  const confLabel = conf.label || 'N/A';
+				  const confVal = (conf.value ?? '');
+				  const base = kg.base_explanation || '';
+				  const domains = kg.domains || {};
+				  const domainItems = Object.entries(domains).slice(0, 6).map(([name, info]) => {
+				    const desc = (info && info.description) ? info.description : '';
+				    return `<li><strong>${name}</strong>: ${desc}</li>`;
+				  }).join('');
+				  return `
+				    <div class=\"kv\">\n\t\t\t\t      <div><strong>Severity</strong></div><div>${severity}</div>\n\t\t\t\t      <div><strong>Fused score</strong></div><div>${fused}</div>\n\t\t\t\t      <div><strong>TSN score</strong></div><div>${tsn}</div>\n\t\t\t\t      <div><strong>SGCN score</strong></div><div>${sgcn}</div>\n\t\t\t\t      <div><strong>ST-GCN score</strong></div><div>${stgcn}</div>\n\t\t\t\t      <div><strong>Confidence</strong></div><div>${confLabel}${confVal !== '' ? ` (${confVal})` : ''}</div>\n\t\t\t\t    </div>\n\t\t\t\t    ${base ? `<div style=\\"margin-top:10px;\\"><strong style=\\"color: var(--muted);\\">Summary</strong><div style=\\"margin-top:6px;\\">${base}</div></div>` : ''}\n\t\t\t\t    ${domainItems ? `<div style=\\"margin-top:10px;\\"><strong style=\\"color: var(--muted);\\">Domains</strong><ul class=\\"compact\\">${domainItems}</ul></div>` : ''}
+				  `;
+				}
+
+				form.addEventListener('submit', async (e) => {
 			  e.preventDefault();
-			  out.textContent = '';
+				  out.textContent = '';
+				  readable.innerHTML = '';
 			  pdfSec.innerHTML = '';
 			  sevRow.innerHTML = '';
 			  spin.style.display = 'inline-block';
@@ -122,8 +156,9 @@ def ui_page(request: Request) -> str:
 			    const resp = await fetch('/api/v1/infer', { method: 'POST', body: fd });
 			    const json = await resp.json();
 			    if (!resp.ok) throw new Error(json.detail || 'Inference failed');
-			    const summary = json.summary || {};
-			    out.textContent = JSON.stringify(summary, null, 2);
+				    const summary = json.summary || {};
+				    readable.innerHTML = renderReadable(summary);
+				    out.textContent = JSON.stringify(summary, null, 2);
 
 			    // Severity badge
 			    const sev = (summary.scores && summary.scores.severity) || summary.severity;
