@@ -52,6 +52,6 @@ jobs:
         cache-to: type=gha,mode=max
         platforms: linux/amd64
 
-    - name: Output image digest
+    - name: Output image info
       if: github.event_name != 'pull_request'
       run: echo "Image pushed: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}"
