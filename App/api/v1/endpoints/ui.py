@@ -95,7 +95,7 @@ def ui_page(request: Request) -> str:
 				</div>
 				<div class="hero">
 					<h1>Early Autism Screening Assistant</h1>
-					<p>Upload a short video to receive a knowledge-guided screening summary with severity and domain highlights. This is an assistive tool and not a medical diagnosis. Please consult a physician for further guidance</p>
+					<p>Upload a short video to receive a knowledge-guided screening summary with severity and domain highlights. This is an assistive tool and not a medical diagnosis. Please consult a physician for further guidance. This service respects your privacy</p>
 				</div>
 				<div class="card">
 					<form id="infer-form" enctype="multipart/form-data">
