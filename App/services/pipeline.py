@@ -4,13 +4,13 @@ import math
 
 import numpy as np
 
-from app.core.config import get_settings
-from app.services.feature_extraction import FeatureExtractionService
-from app.services.models.tsn import TSNRegressorInference
-from app.services.models.sgcn import SGCNInference
-from app.services.models.stgcn import STGCNInference
-from app.services.fusion import FusionService
-from app.services.knowledge import KnowledgeService
+from App.core.config import get_settings
+from App.services.feature_extraction import FeatureExtractionService
+from App.services.models.tsn import TSNRegressorInference
+from App.services.models.sgcn import SGCNInference
+from App.services.models.stgcn import STGCNInference
+from App.services.fusion import FusionService
+from App.services.knowledge import KnowledgeService
 
 
 class InferencePipeline:

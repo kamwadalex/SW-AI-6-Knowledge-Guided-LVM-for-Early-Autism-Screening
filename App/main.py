@@ -1,8 +1,8 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from app.core.config import get_settings
-from app.core.logging import configure_logging
-from app.middleware.limits import UploadSizeLimitMiddleware
+from App.core.config import get_settings
+from App.core.logging import configure_logging
+from App.middleware.limits import UploadSizeLimitMiddleware
 
 
 def create_app() -> FastAPI:
@@ -27,7 +27,7 @@ def create_app() -> FastAPI:
 	# Enforce 100 MB upload limit
 	app.add_middleware(UploadSizeLimitMiddleware, max_bytes=100 * 1024 * 1024)
 
-	from app.api.v1.api import api_router as api_v1_router  # noqa: WPS433
+	from App.api.v1.api import api_router as api_v1_router  # noqa: WPS433
 
 	@app.get("/")
 	def root() -> dict:

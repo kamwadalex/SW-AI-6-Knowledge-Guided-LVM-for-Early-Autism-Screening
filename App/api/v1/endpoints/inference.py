@@ -4,10 +4,10 @@ from typing import Optional
 from fastapi import APIRouter, UploadFile, File, Form, HTTPException
 from fastapi.responses import JSONResponse
 
-from app.services.pipeline import InferencePipeline
-from app.services.report import ReportService
-from app.services.knowledge_guidance import KnowledgeCorpus, KnowledgeGuidanceService
-from app.core.config import get_settings
+from App.services.pipeline import InferencePipeline
+from App.services.report import ReportService
+from App.services.knowledge_guidance import KnowledgeCorpus, KnowledgeGuidanceService
+from App.core.config import get_settings
 
 
 router = APIRouter()
