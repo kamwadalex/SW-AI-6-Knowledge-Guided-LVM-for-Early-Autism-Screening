@@ -8,7 +8,7 @@ ENV PYTHONDONTWRITEBYTECODE=1 \
 WORKDIR /app
 
 # Install system dependencies for OpenCV (headless) and MediaPipe
-# opencv-python-headless is pre-built but needs runtime libraries
+# opencv-python-headless is pre-built but needs minimal runtime libraries
 # ffmpeg will pull in most video codec libraries needed
 RUN apt-get update && \
     apt-get install -y --no-install-recommends \
@@ -17,14 +17,11 @@ RUN apt-get update && \
         libsm6 \
         libxext6 \
         libxrender1 \
-        libgl1-mesa-glx \
         ffmpeg \
         libv4l-0 \
         libv4lconvert0 \
         libjpeg62-turbo \
         libpng16-16 \
-        libtiff5 \
-        libwebp6 \
         python3-dev && \
     rm -rf /var/lib/apt/lists/*
 
