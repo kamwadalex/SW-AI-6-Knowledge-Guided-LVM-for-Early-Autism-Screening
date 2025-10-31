@@ -1,10 +1,10 @@
 from fastapi import APIRouter
 
-from app.api.v1.endpoints.health import router as health_router
-from app.api.v1.endpoints.example import router as example_router
-from app.api.v1.endpoints.inference import router as inference_router
-from app.api.v1.endpoints.report import router as report_router
-from app.api.v1.endpoints.ui import router as ui_router
+from App.api.v1.endpoints.health import router as health_router
+from App.api.v1.endpoints.example import router as example_router
+from App.api.v1.endpoints.inference import router as inference_router
+from App.api.v1.endpoints.report import router as report_router
+from App.api.v1.endpoints.ui import router as ui_router
 
 
 api_router = APIRouter()
