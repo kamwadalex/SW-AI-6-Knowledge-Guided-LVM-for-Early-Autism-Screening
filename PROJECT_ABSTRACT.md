@@ -4,9 +4,7 @@
 
 This project develops a novel knowledge-driven framework for early autism screening by integrating a systematically constructed corpus of published diagnostic literature with Large Vision Models (LVMs) optimized for live or uploaded video analysis in resource-constrained settings. The corpus, derived from peer-reviewed studies, clinical guidelines, and culturally adapted assessment protocols, is annotated to capture visual and behavioral markers of autism such as:
 
-- Gaze fixation
-- Facial affect recognition
-- Repetitive motor patterns
+- Gaze fixation, Facial affect recognition, Repetitive motor patterns
 - Joint attention
 - Atypical social reciprocity
 
