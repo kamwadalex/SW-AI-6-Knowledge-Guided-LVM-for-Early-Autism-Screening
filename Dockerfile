@@ -8,7 +8,9 @@ ENV PYTHONDONTWRITEBYTECODE=1 \
 WORKDIR /app
 
 # Install system dependencies for OpenCV (headless) and MediaPipe
-# opencv-python-headless is pre-built but needs minimal runtime libraries
+# Use package names that are more portable across Debian slim variants (bookworm/trixie).
+# Some packages (e.g. libgl1-mesa-glx, libtiff5, libwebp6) may not exist on newer Debian
+# releases, so prefer the broadly available names or -dev meta-packages for compatibility.
 # ffmpeg will pull in most video codec libraries needed
 RUN apt-get update && \
     apt-get install -y --no-install-recommends \
@@ -17,11 +19,14 @@ RUN apt-get update && \
         libsm6 \
         libxext6 \
         libxrender1 \
+        libgl1 \
         ffmpeg \
         libv4l-0 \
         libv4lconvert0 \
-        libjpeg62-turbo \
-        libpng16-16 \
+        libjpeg-dev \
+        libpng-dev \
+        libtiff-dev \
+        libwebp-dev \
         python3-dev && \
     rm -rf /var/lib/apt/lists/*
 
